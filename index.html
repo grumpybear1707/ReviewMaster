@@ -184,17 +184,7 @@
                     });
                     currentUser = userName;
                     //call refresh method in order to authenticate user and get new temp credentials
-                    AWS.config.credentials.refresh((error) => {
-                        if (error)
-                        {
-                            console.error(error);
-                        }
-                        else
-                        {
-                            console.log('Successfully logged!');
-                        }
-                    });
-
+                    refreshTempCreds()
                     alert(AWS.config.credentials);
 
                     // Instantiate aws sdk service objects now that the credentials have been updated.
@@ -210,6 +200,21 @@
             });
         }
 
+				function refreshTempCreds()
+				{
+					//call refresh method in order to authenticate user and get new temp credentials
+					AWS.config.credentials.refresh((error) => {
+							if (error)
+							{
+									console.error(error);
+							}
+							else
+							{
+									console.log('Successfully logged!');
+							}
+					});
+				}
+
         //Upload the file to the server
         function doUploadFile()
         {
@@ -219,33 +224,66 @@
                 return;
             }
             var fileToUpload = document.getElementById('itemUpload').files[0];
-            var apiEndpoint = "https://079oabr1f1.execute-api.us-east-1.amazonaws.com/Test/"
-                               + currentUser + "/" + fileToUpload.name;
-            alert("apiEndpoint:- " + apiEndpoint);
 
-            var xhrReq = new XMLHttpRequest();
-            xhrReq.open("PUT",apiEndpoint, false);
-            //xhrReq.setRequestHeader("Access-Control-Allow-Origin", "*");
-            //xhrReq.setRequestHeader("Access-Control-Allow-Methods", "POST,PUT,GET");
-            //xhrReq.setRequestHeader("Access-Control-Allow-Headers", "POST,PUT,GET");
-            xhrReq.send();
-            var uploadUrl = xhrReq.responseText;
-            alert("uploadUrl:- " + uploadUrl);
-            console.log("uploadurl:" + uploadUrl);
-            uploadUrl = uploadUrl.replace(/^"(.*)"$/, '$1');
-            console.log("cleaned uploadurl:" + uploadUrl);
+						//Initialize API gateway client with temporary credentials
+						var apigClient = apigClientFactory.newClient(
+							{
+    						accessKey: AWS.config.credentials.accessKeyId,
+    						secretKey: AWS.config.credentials.secretAccessKey,
+    						sessionToken: AWS.config.credentials.sessionToken
+							});
 
-            //var uploadUrl_enc = encodeURIComponent(uploadUrl);
+						var params =
+						{
+							"folder": currentUser,
+							"item": fileToUpload.name
+						};
 
-            ////xhrReq.upload.addEventListener("loadstart", loadStartFunction, false);
-            ////xhrReq.upload.addEventListener("progress", progressFunction, false);
-            ////xhrReq.upload.addEventListener("load", transferCompleteFunction, false);
-            var xhrReq2 = new XMLHttpRequest();
-            xhrReq2.open("PUT", uploadUrl, false);
-            xhrReq2.setRequestHeader('Content-Type', fileToUpload.type);
-            xhrReq2.send(fileToUpload);
-            //xhrReq2.send();
-            alert(xhrReq2.response);
+						apigClient.folderItemPut(params)
+						.then(function(uploadUrl){
+				        //This is where you would put a success callback
+								console.log("folderItemPut sucessful !! uploadurl:" + uploadUrl);
+								alert("folderItemPut succeeded: returnval:" + uploadUrl);
+
+								var xhrReq2 = new XMLHttpRequest();
+		            xhrReq2.open("PUT", uploadUrl, false);
+		            xhrReq2.setRequestHeader('Content-Type', fileToUpload.type);
+		            xhrReq2.send(fileToUpload);
+		            alert(xhrReq2.response);
+
+				    }).catch( function(result){
+				        //This is where you would put an error callback
+								console.log("folderItemPut failed !! result:" + result);
+								alert("folderItemPut failed: returnval:" + result);
+				    });
+
+            //var apiEndpoint = "https://079oabr1f1.execute-api.us-east-1.amazonaws.com/Test/"
+            //                    + currentUser + "/" + fileToUpload.name;
+            // alert("apiEndpoint:- " + apiEndpoint);
+						//
+            // var xhrReq = new XMLHttpRequest();
+            // xhrReq.open("PUT",apiEndpoint, false);
+            // //xhrReq.setRequestHeader("Access-Control-Allow-Origin", "*");
+            // //xhrReq.setRequestHeader("Access-Control-Allow-Methods", "POST,PUT,GET");
+            // //xhrReq.setRequestHeader("Access-Control-Allow-Headers", "POST,PUT,GET");
+            // xhrReq.send();
+            // var uploadUrl = xhrReq.responseText;
+            // alert("uploadUrl:- " + uploadUrl);
+            // console.log("uploadurl:" + uploadUrl);
+            // uploadUrl = uploadUrl.replace(/^"(.*)"$/, '$1');
+            // console.log("cleaned uploadurl:" + uploadUrl);
+						//
+            // //var uploadUrl_enc = encodeURIComponent(uploadUrl);
+						//
+            // ////xhrReq.upload.addEventListener("loadstart", loadStartFunction, false);
+            // ////xhrReq.upload.addEventListener("progress", progressFunction, false);
+            // ////xhrReq.upload.addEventListener("load", transferCompleteFunction, false);
+            // var xhrReq2 = new XMLHttpRequest();
+            // xhrReq2.open("PUT", uploadUrl, false);
+            // xhrReq2.setRequestHeader('Content-Type', fileToUpload.type);
+            // xhrReq2.send(fileToUpload);
+            // //xhrReq2.send();
+            // alert(xhrReq2.response);
         }
     </script>
 </html>
