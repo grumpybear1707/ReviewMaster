@@ -1,0 +1,173 @@
+---
+swagger: "2.0"
+info:
+  version: "2017-07-17T13:09:55Z"
+  title: "ReviewMaster"
+host: "079oabr1f1.execute-api.us-east-1.amazonaws.com"
+basePath: "/Test"
+schemes:
+- "https"
+paths:
+  /{folder}:
+    get:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "folder"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+        requestTemplates:
+          application/json: "{\n    \"folderName\":\"$input.params('folder')\"\n}"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:457581927478:function:s3GetFolderContents/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws"
+  /{folder}/{item}:
+    get:
+      produces:
+      - "application/json"
+      parameters:
+      - name: "item"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "folder"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+      security:
+      - sigv4: []
+      x-amazon-apigateway-integration:
+        credentials: "arn:aws:iam::457581927478:role/ReviewMasterAPIGatewayS3FullAccess"
+        responses:
+          default:
+            statusCode: "200"
+        requestParameters:
+          integration.request.path.object: "method.request.path.item"
+          integration.request.header.x-amz-acl: "'authenticated-read'"
+          integration.request.path.folder: "method.request.path.folder"
+          integration.request.header.Expect: "'100-continue'"
+          integration.request.path.bucket: "'wildan.reviewmaster.reviewdata'"
+        uri: "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{folder}/{object}"
+        passthroughBehavior: "when_no_match"
+        httpMethod: "GET"
+        contentHandling: "CONVERT_TO_BINARY"
+        type: "aws"
+    put:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "Access-Control-Allow-Origin"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "Access-Control-Allow-Headers"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "item"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "Access-Control-Allow-Methods"
+        in: "header"
+        required: false
+        type: "string"
+      - name: "folder"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+      security:
+      - sigv4: []
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: "{\r\n    \"folderName\": \"$input.params('folder')\"\
+            ,\r\n    \"itemName\": \"$input.params('item')\"\r\n}"
+        uri: "arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/arn:aws:lambda:us-east-1:457581927478:function:s3GenUploadUrl/invocations"
+        passthroughBehavior: "when_no_templates"
+        httpMethod: "POST"
+        contentHandling: "CONVERT_TO_TEXT"
+        type: "aws"
+    options:
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "item"
+        in: "path"
+        required: true
+        type: "string"
+      - name: "folder"
+        in: "path"
+        required: true
+        type: "string"
+      responses:
+        200:
+          description: "200 response"
+          schema:
+            $ref: "#/definitions/Empty"
+          headers:
+            Access-Control-Allow-Origin:
+              type: "string"
+            Access-Control-Allow-Methods:
+              type: "string"
+            Access-Control-Allow-Headers:
+              type: "string"
+      x-amazon-apigateway-integration:
+        responses:
+          default:
+            statusCode: "200"
+            responseParameters:
+              method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS,PUT'"
+              method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+              method.response.header.Access-Control-Allow-Origin: "'*'"
+        requestTemplates:
+          application/json: "{\"statusCode\": 200}"
+        passthroughBehavior: "when_no_match"
+        type: "mock"
+securityDefinitions:
+  sigv4:
+    type: "apiKey"
+    name: "Authorization"
+    in: "header"
+    x-amazon-apigateway-authtype: "awsSigv4"
+definitions:
+  Empty:
+    type: "object"
+    title: "Empty Schema"
+x-amazon-apigateway-binary-media-types:
+- "application/zip"

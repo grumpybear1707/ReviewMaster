@@ -14,6 +14,19 @@
 		<script src="./source/aws-cognito-sdk.min.js"></script>
 		<script src="./source/amazon-cognito-identity.min.js"></script>
 		<script src="./source/aws-sdk-2.82.0.min.js"></script>
+
+		<!--ReviewMaster API Gateway js sdks-->
+		<script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/axios/dist/axios.standalone.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/CryptoJS/rollups/hmac-sha256.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/CryptoJS/rollups/sha256.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/CryptoJS/components/hmac.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/CryptoJS/components/enc-base64.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/url-template/url-template.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/apiGatewayCore/sigV4Client.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/apiGatewayCore/apiGatewayClient.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/apiGatewayCore/simpleHttpClient.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/lib/apiGatewayCore/utils.js"></script>
+    <script type="text/javascript" src="./source/apiGateway-ReviewMaster-js-sdk/apigClient.js"></script>
 	</head>
 	<body>
 		<div class="container">
@@ -200,10 +213,6 @@
         //Upload the file to the server
         function doUploadFile()
         {
-            //alert(document.getElementById('itemUpload').value);
-            //alert(document.getElementById('itemUpload').files.item(0).name);
-            //alert(document.getElementById('itemUpload').files.item(0).size);
-            //alert(document.getElementById('itemUpload').files.item(0).type);
             if(currentUser === "" || currentUser === undefined)
             {
                 alert("Please sign in to upload file");
