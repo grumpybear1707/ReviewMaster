@@ -239,23 +239,23 @@
 							"item": fileToUpload.name,
 							"Content-Type":"application/json"
 						};
-						var body = undefined;
-						var additionalParams = {
-						    //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
-						    headers: {
-						        "content-type":"application/json"
-						    }
-						};
+						// var body = undefined;
+						// var additionalParams = {
+						//     //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+						//     headers: {
+						//         "content-type":"application/json"
+						//     }
+						// };
 
-						apigClient.folderItemPut(params,body,additionalParams)
-						.then(function(uploadUrl){
+						apigClient.folderItemPut(params)//,body,additionalParams)
+						.then(function(response){
 				        //This is where you would put a success callback
-								console.log("folderItemPut sucessful !! uploadurl:" + uploadUrl);
-								alert("folderItemPut succeeded: returnval:" + uploadUrl);
-
+								console.log("folderItemPut sucessful !! uploadurl:" + response);
+								alert("folderItemPut succeeded: returnval:" + response);
+								var uploadUrl = response.data.body.presigned_url;
 								var xhrReq2 = new XMLHttpRequest();
 		            xhrReq2.open("PUT", uploadUrl, false);
-		            xhrReq2.setRequestHeader('Content-Type', fileToUpload.type);
+		            xhrReq2.setRequestHeader('Content-Type', 'application/zip');
 		            xhrReq2.send(fileToUpload);
 		            alert(xhrReq2.response);
 
