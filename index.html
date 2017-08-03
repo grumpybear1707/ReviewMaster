@@ -116,7 +116,7 @@
             var attributeEmail = new AWSCognito.CognitoIdentityServiceProvider.CognitoUserAttribute(dataEmail);
             attributeList.push(attributeEmail);
 
-            //Create the requited preferred username attribute
+            //Create the required preferred username attribute
             var dataPrefUsername = {
                 Name: 'preferred_username',
                 Value: userName
@@ -236,10 +236,18 @@
 						var params =
 						{
 							"folder": currentUser,
-							"item": fileToUpload.name
+							"item": fileToUpload.name,
+							"Content-Type":"application/json"
+						};
+						var body = undefined;
+						var additionalParams = {
+						    //If there are any unmodeled query parameters or headers that need to be sent with the request you can add them here
+						    headers: {
+						        "content-type":"application/json"
+						    }
 						};
 
-						apigClient.folderItemPut(params)
+						apigClient.folderItemPut(params,body,additionalParams)
 						.then(function(uploadUrl){
 				        //This is where you would put a success callback
 								console.log("folderItemPut sucessful !! uploadurl:" + uploadUrl);

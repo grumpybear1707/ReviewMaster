@@ -101,6 +101,24 @@ apigClientFactory.newClient = function (config) {
     };
     
     
+    apigClient.folderOptions = function (params, body, additionalParams) {
+        if(additionalParams === undefined) { additionalParams = {}; }
+        
+        apiGateway.core.utils.assertParametersDefined(params, [], ['body']);
+        
+        var folderOptionsRequest = {
+            verb: 'options'.toUpperCase(),
+            path: pathComponent + uritemplate('/{folder}').expand(apiGateway.core.utils.parseParametersToObject(params, [])),
+            headers: apiGateway.core.utils.parseParametersToObject(params, []),
+            queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
+            body: body
+        };
+        
+        
+        return apiGatewayClient.makeRequest(folderOptionsRequest, authType, additionalParams, config.apiKey);
+    };
+    
+    
     apigClient.folderItemGet = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
@@ -122,12 +140,12 @@ apigClientFactory.newClient = function (config) {
     apigClient.folderItemPut = function (params, body, additionalParams) {
         if(additionalParams === undefined) { additionalParams = {}; }
         
-        apiGateway.core.utils.assertParametersDefined(params, ['item', 'folder', 'Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Methods'], ['body']);
+        apiGateway.core.utils.assertParametersDefined(params, ['item', 'folder', 'Content-Type'], ['body']);
         
         var folderItemPutRequest = {
             verb: 'put'.toUpperCase(),
             path: pathComponent + uritemplate('/{folder}/{item}').expand(apiGateway.core.utils.parseParametersToObject(params, ['item', 'folder', ])),
-            headers: apiGateway.core.utils.parseParametersToObject(params, ['Access-Control-Allow-Origin', 'Access-Control-Allow-Headers', 'Access-Control-Allow-Methods']),
+            headers: apiGateway.core.utils.parseParametersToObject(params, ['Content-Type']),
             queryParams: apiGateway.core.utils.parseParametersToObject(params, []),
             body: body
         };
