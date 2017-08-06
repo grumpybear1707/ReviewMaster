@@ -1,0 +1,257 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the Rest api that exposes all the lambda functions"
+Resources:
+  ReviewMasterAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: "ReviewMasterAPI"
+      FailOnWarnings: true
+      Body:
+        swagger: "2.0"
+        info:
+          version: "2017-08-03T10:36:51Z"
+          title: "ReviewMaster"
+        basePath: "/Test"
+        schemes:
+        - "https"
+        paths:
+          /{folder}:
+            get:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              parameters:
+              - name: "folder"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: "{\n    \"folderName\":\"$input.params('folder')\"\n}"
+                #Change this uri to use a parametrised lambda name
+                uri: !Join ["", ["arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/", !ImportValue "S3getItemList-ARN", "/invocations"]]
+                passthroughBehavior: "when_no_templates"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws"
+            options:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Methods:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                type: "mock"
+          /{folder}/{item}:
+            get:
+              produces:
+              - "application/json"
+              parameters:
+              - name: "item"
+                in: "path"
+                required: true
+                type: "string"
+              - name: "folder"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+              security:
+              - sigv4: []
+              x-amazon-apigateway-integration:
+                #Chnage this to accept role arn as parameter
+                credentials: "arn:aws:iam::457581927478:role/ReviewMasterAPIGatewayS3FullAccess"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestParameters:
+                  integration.request.path.object: "method.request.path.item"
+                  integration.request.header.x-amz-acl: "'authenticated-read'"
+                  integration.request.path.folder: "method.request.path.folder"
+                  integration.request.header.Expect: "'100-continue'"
+                  integration.request.path.bucket: "'wildan.reviewmaster.reviewdata'"  #This will need to be parametrized as well
+                uri: "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{folder}/{object}"
+                passthroughBehavior: "when_no_match"
+                httpMethod: "GET"
+                contentHandling: "CONVERT_TO_BINARY"
+                type: "aws"
+            put:
+              consumes:
+              - "text/plain;charset=UTF-8"
+              - "application/json"
+              - "text/plain"
+              produces:
+              - "application/json"
+              parameters:
+              - name: "Content-Type"
+                in: "header"
+                required: false
+                type: "string"
+              - name: "item"
+                in: "path"
+                required: true
+                type: "string"
+              - name: "folder"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+              security:
+              - sigv4: []
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  text/plain;charset=UTF-8: "{\n    \"folderName\": \"$input.params('folder')\"\
+                    ,\n    \"itemName\": \"$input.params('item')\"\n}"
+                  application/json: "{\r\n    \"folderName\": \"$input.params('folder')\"\
+                    ,\r\n    \"itemName\": \"$input.params('item')\"\r\n}"
+                  text/plain: "{\n    \"folderName\": \"$input.params('folder')\",\n    \"\
+                    itemName\": \"$input.params('item')\"\n}"
+                #change this to lambda created by cfn
+                uri: !Join ["", ["arn:aws:apigateway:us-east-1:lambda:path/2015-03-31/functions/", !ImportValue "S3urlGen-ARN", "/invocations"]]
+                passthroughBehavior: "when_no_templates"
+                httpMethod: "POST"
+                contentHandling: "CONVERT_TO_TEXT"
+                type: "aws"
+            options:
+              consumes:
+              - "application/json"
+              produces:
+              - "application/json"
+              parameters:
+              - name: "item"
+                in: "path"
+                required: true
+                type: "string"
+              - name: "folder"
+                in: "path"
+                required: true
+                type: "string"
+              responses:
+                '200':
+                  description: "200 response"
+                  schema:
+                    $ref: "#/definitions/Empty"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      type: "string"
+                    Access-Control-Allow-Methods:
+                      type: "string"
+                    Access-Control-Allow-Headers:
+                      type: "string"
+              x-amazon-apigateway-integration:
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'GET,OPTIONS,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: "{\"statusCode\": 200}"
+                passthroughBehavior: "when_no_match"
+                type: "mock"
+        securityDefinitions:
+          sigv4:
+            type: "apiKey"
+            name: "Authorization"
+            in: "header"
+            x-amazon-apigateway-authtype: "awsSigv4"
+        definitions:
+          Empty:
+            type: "object"
+            title: "Empty Schema"
+        x-amazon-apigateway-binary-media-types:
+        - "application/zip"
+  ReviewMasterDeploy:
+    Type: "AWS::ApiGateway::Deployment"
+    Properties:
+      Description: "Test stage"
+      RestApiId: !Ref ReviewMasterAPI
+      StageName: "dummy"
+  ReviewMasterDepStage:
+    Type: "AWS::ApiGateway::Stage"
+    Properties:
+      DeploymentId: !Ref ReviewMasterDeploy
+      Description: "API Deplyment Test stage"
+      RestApiId: !Ref ReviewMasterAPI
+      StageName: "Test"
+  APIInvokeS3URLGEN:
+    Type: AWS::Lambda::Permission
+    DependsOn: ReviewMasterAPI
+    Properties:
+      Action: "lambda:InvokeFunction"
+      # SourceArn:
+      #   !Sub |
+      #     arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${ReviewMasterAPI}/*/PUT/*/*
+      FunctionName: !ImportValue "S3urlGen-ARN"
+          #arn:aws:lambda:${AWS::Region}:${AWS::AccountId}:function:s3GenUploadUrl:$LATEST
+          #arn:aws:lambda:us-east-1:457581927478:function:s3GenUploadUrl
+      Principal: "apigateway.amazonaws.com"
+Outputs:
+  # APIGWARN:
+  #   Description: ARN of the ReviewMaster APIGateway
+  #   Value: !GetAtt ReviewMasterDeploy.Arn
+  #   Export:
+  #     Name: "APIGateway-ARN"
+  APIGINVURL:
+    Description: Invoke url of the ReviewMaster APIGateway
+    Value: !Sub |
+      https://${ReviewMasterAPI}.execute-api.${AWS::Region}.amazonaws.com/${ReviewMasterDepStage}
+    Export:
+      Name: "APIGateway-InvokeUrl"

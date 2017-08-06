@@ -1,0 +1,60 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the S3 bucket for ReviewMaster review items"
+Parameters:
+  VPCCIDR:
+    Type: "String"
+    Default: "10.0.0.0/16"
+    Description: "VPC CIDR Block"
+  PublicSNCidr:
+    Type: "String"
+    Default: "10.0.1.0/24"
+    Description: "Subnet CIDR Block"
+Resources:
+  RMVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref "VPCCIDR"
+  RMPublicSN:
+    Type: "AWS::EC2::Subnet"
+    Properties:
+      AvailabilityZone:
+        Fn::Select:
+        - 0
+        - Fn::GetAZs: ""
+      CidrBlock: !Ref "PublicSNCidr"
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref "RMVPC"
+  IGW:
+    Type: "AWS::EC2::InternetGateway"
+
+  VPCGWAttach:
+    Type: "AWS::EC2::VPCGatewayAttachment"
+    Properties:
+      InternetGatewayId: !Ref "IGW"
+      VpcId: !Ref "RMVPC"
+  PublicSNRteTable:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref "RMVPC"
+  PublicRoute:
+    Type: "AWS::EC2::Route"
+    Properties:
+      DestinationCidrBlock: "0.0.0.0/0"
+      GatewayId: !Ref "IGW"
+      RouteTableId: !Ref "PublicSNRteTable"
+  PublicSNRouteTBlAssoc:
+    Type: "AWS::EC2::SubnetRouteTableAssociation"
+    Properties:
+      RouteTableId: !Ref "PublicSNRteTable"
+      SubnetId: !Ref "RMPublicSN"
+Outputs:
+  VPCID:
+    Description: "VPC ID for review master"
+    Value: !Ref "RMVPC"
+    Export:
+      Name: "RMVPCID"
+  PublicSNID:
+    Description: "Subnet ID for review master public Subnet"
+    Value: !Ref "RMPublicSN"
+    Export:
+      Name: "RMPublicSNID"

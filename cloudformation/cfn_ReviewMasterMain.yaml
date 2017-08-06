@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the Rest api that exposes all the lambda functions"
+Resources:
+  VPCInfraSTACK:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_vpc.yaml"
+  S3STACK:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_s3.yaml"
+  DBSTACK:
+    Type: "AWS::CloudFormation::Stack"
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_dynamodb.yaml"
+  LAMBDASTACK:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: DBSTACK
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_lambdas.yaml"
+  APIGATEWAYSTACK:
+    Type: "AWS::CloudFormation::Stack"
+    DependsOn: LAMBDASTACK
+    Properties:
+      TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_apigateway.yaml"

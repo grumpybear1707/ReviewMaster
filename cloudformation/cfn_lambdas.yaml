@@ -1,0 +1,105 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the lambda functions"
+Resources:
+  GENS3PUTURL:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "s3GenUploadUrl.handler"
+      Role:
+        Fn::GetAtt:
+          - "LAMBDAS3EXECROLE"
+          - "Arn"
+      Code:
+        S3Bucket: "wildan.reviewmaster"
+        S3Key: "lambda/s3GenUploadUrl.zip"
+      Runtime: "nodejs6.10"
+  GETS3ITEMLIST:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "s3GetFolderContents.handler"
+      Role:
+        Fn::GetAtt:
+          - "LAMBDAS3EXECROLE"
+          - "Arn"
+      Code:
+        S3Bucket: "wildan.reviewmaster"
+        S3Key: "lambda/s3GetFolderContents.zip"
+      Runtime: "nodejs6.10"
+  RECORDS3PUT:
+    Type: "AWS::Lambda::Function"
+    Properties:
+      Handler: "handleS3PutObject.handler"
+      Role:
+        Fn::GetAtt:
+          - "LAMBDADYNDBEXECROLE"
+          - "Arn"
+      Code:
+        S3Bucket: "wildan.reviewmaster"
+        S3Key: "lambda/handleS3PutObject.zip"
+      Runtime: "nodejs6.10"
+  LAMBDAS3EXECROLE:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - s3:*
+            Resource: #arn:aws:logs:*:*:*
+            - arn:aws:s3:::wildan.reviewmaster.reviewdata  #change this
+            - arn:aws:s3:::wildan.reviewmaster.reviewdata/*  #change this
+  LAMBDADYNDBEXECROLE:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+          Action:
+          - sts:AssumeRole
+      Path: "/"
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+      - PolicyName: root
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Effect: Allow
+            Action:
+            - dynamodb:*
+            Resource: !Join ["", [ "arn:aws:dynamodb:us-east-1:457581927478:table/",!ImportValue "DB-TableName"] ] #change this #arn:aws:logs:*:*:*
+Outputs:
+  S3urlGenARN:
+    Description: ARN of the s3GenUploadUrl lambda function
+    Value: !GetAtt GENS3PUTURL.Arn
+    Export:
+      Name: "S3urlGen-ARN"
+  S3getItemListARN:
+    Description: ARN of the s3GetFolderContents lambda function
+    Value: !GetAtt GETS3ITEMLIST.Arn
+    Export:
+      Name: "S3getItemList-ARN"
+  RecordS3PutARN:
+    Description: ARN of the handleS3PutObject lambda function
+    Value: !GetAtt RECORDS3PUT.Arn
+    Export:
+      Name: "RecordS3Put-ARN"

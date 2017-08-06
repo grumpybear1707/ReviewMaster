@@ -1,0 +1,25 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the S3 bucket for ReviewMaster review items"
+Resources:
+  ReviewMasterBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      #BucketName: !Sub ${User}-encryption-service
+      CorsConfiguration:
+        CorsRules:
+        - AllowedHeaders: ['*']
+          AllowedMethods: [GET, PUT, POST]
+          AllowedOrigins: ['*']
+          ExposedHeaders: ["Accept-Ranges","Content-Range","Content-Encoding","Content-Length","Access-Control-Allow-Origin"]
+          Id: "myCORSRuleId1"
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Function: !ImportValue "RecordS3Put-ARN"
+            Event: "s3:ObjectCreated:*"
+  InvokeLambdaPermission:
+    Type: "AWS::Lambda::Permission"
+    Properties:
+      Action: "lambda:invokeFunction"
+      SourceArn: !Join [ ":", [ "arn","aws","s3","", "", "*"] ]
+      FunctionName: !ImportValue "RecordS3Put-ARN"
+      Principal: "s3.amazonaws.com"
