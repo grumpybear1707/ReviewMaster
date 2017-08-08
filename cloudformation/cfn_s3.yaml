@@ -3,6 +3,7 @@ Description: "Create the S3 bucket for ReviewMaster review items"
 Resources:
   ReviewMasterBucket:
     Type: "AWS::S3::Bucket"
+    DependsOn: InvokeLambdaPermission
     Properties:
       #BucketName: !Sub ${User}-encryption-service
       CorsConfiguration:

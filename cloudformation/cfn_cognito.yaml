@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: "Create the Cognito userpool and client pool id"
+Parameters:
+  UserPoolName:
+    Type: String
+    Description: "Name of the user pool that will be created for the app"
+Resources:
+  RMUserPool:
+    Type: "AWS::Cognito::UserPool"
+    Properties:
+      AliasAttributes:
+        - preferred_username
+      Schema:
+        -
+          AttributeDataType: String
+          Name: "preferred_username"
+          Required: true
+        -
+          AttributeDataType: String
+          Name: "email"
+          Required: true
+      # Policies:
+      #   - PasswordPolicy:
+      #     MinimumLength: 6
+      #     RequireNumbers: true
+      UserPoolName: !Ref "UserPoolName"

@@ -1,12 +1,28 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: "Create the Rest api that exposes all the lambda functions"
+Parameters:
+  VPCCIDR:
+    Type: "String"
+    Default: "10.0.0.0/16"
+    Description: "VPC CIDR Block"
+  PublicSNCidr:
+    Type: "String"
+    Default: "10.0.1.0/24"
+    Description: "Subnet CIDR Block"
+  EC2KeyPair:
+    Type: AWS::EC2::KeyPair::KeyName
+    Description: "EC2 KeyPair Name"
 Resources:
   VPCInfraSTACK:
     Type: "AWS::CloudFormation::Stack"
     Properties:
+      Parameters:
+        VPCCIDR: !Ref "VPCCIDR"
+        PublicSNCidr: !Ref "PublicSNCidr"
       TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_vpc.yaml"
   S3STACK:
     Type: "AWS::CloudFormation::Stack"
+    DependsOn: LAMBDASTACK
     Properties:
       TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_s3.yaml"
   DBSTACK:
@@ -23,3 +39,10 @@ Resources:
     DependsOn: LAMBDASTACK
     Properties:
       TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_apigateway.yaml"
+  EC2Stack:
+      Type: "AWS::CloudFormation::Stack"
+      DependsOn: VPCInfraSTACK
+      Properties:
+        Parameters:
+          EC2KeyPair: !Ref EC2KeyPair
+        TemplateURL: "https://s3.amazonaws.com/wildan.reviewmaster/cloudformation/cfn_ec2.yaml"

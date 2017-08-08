@@ -6,34 +6,29 @@ Parameters:
     Description: "EC2 KeyPair Name"
 Resources:
   PublicInstSecGroup:
-  Type: AWS::EC2::SecurityGroup
-  Properties:
-    GroupDescription: "Allow http and ssh to webservers"
-    VpcId:
-      !ImportValue: "RMVPCID"
-    SecurityGroupIngress:
-    - IpProtocol: tcp
-      FromPort: '80'
-      ToPort: '80'
-      CidrIp: 0.0.0.0/0
-    - IpProtocol: ssh
-      FromPort: '22'
-      ToPort: '22'
-      CidrIp: 0.0.0.0/0
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Allow http and ssh to webservers"
+      VpcId: !ImportValue "RMVPCID"
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: '80'
+        ToPort: '80'
+        CidrIp: 0.0.0.0/0
+      - IpProtocol: tcp
+        FromPort: '22'
+        ToPort: '22'
+        CidrIp: 0.0.0.0/0
   EC2Instance:
     Type: "AWS::EC2::Instance"
     Properties:
-      ImageId:
-        Fn::FindInMap:
-          - "RegionMap"
-          - Ref: "AWS::Region"
-          - "AMI"
+      ImageId: "ami-a4c7edb2"
+      InstanceType: "t2.micro"
       KeyName:
-        Ref: "KeyName"
+        Ref: "EC2KeyPair"
       NetworkInterfaces:
         - AssociatePublicIpAddress: "true"
           DeviceIndex: "0"
           GroupSet:
-            - !Ref: "PublicInstSecGroup"
-          SubnetId:
-            ImportValue: "RMPublicSNID"
+            - !Ref "PublicInstSecGroup"
+          SubnetId: !ImportValue "RMPublicSNID"
