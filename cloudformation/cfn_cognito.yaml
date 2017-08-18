@@ -24,3 +24,87 @@ Resources:
       #     MinimumLength: 6
       #     RequireNumbers: true
       UserPoolName: !Ref "UserPoolName"
+  RMUserPoolClient:
+    Type: "AWS::Cognito::UserPoolClient"
+    Properties:
+      ClientName: "ReviewMasterApp"
+      GenerateSecret: false
+      UserPoolId: !Ref RMUserPool
+  RMIdentityPool:
+    Type: "AWS::Cognito::IdentityPool"
+    Properties:
+      IdentityPoolName: ReviewMasterIDPool
+      AllowUnauthenticatedIdentities: False
+      CognitoIdentityProviders:
+        - ClientId: !Ref RMUserPoolClient
+          ProviderName: !GetAtt RMUserPool.ProviderName
+  CognitoUnauthRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: "Cognito_ReviewMaster_Unauth_Role"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: [ 'sts:AssumeRole' ]
+      Policies:
+        - PolicyName: cognitounauth
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - mobileanalytics:PutEvents
+                - cognito-sync:*
+                Resource:
+                - "*"
+  CognitoAuthRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      RoleName: !Sub Cognito_ReviewMaster_Auth_Role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Action: [ 'sts:AssumeRole' ]
+      Policies:
+        - PolicyName: cognitoauth
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - mobileanalytics:PutEvents
+                - cognito-sync:*
+                - execute-api:*
+                Resource:
+                - "*"
+  RMIdentityPoolRoleAttachment:
+    DependsOn: [ RMIdentityPool, CognitoUnauthRole, CognitoAuthRole ]
+    Type: "AWS::Cognito::IdentityPoolRoleAttachment"
+    Properties:
+      IdentityPoolId: !Ref RMIdentityPool
+      Roles:
+        authenticated: !GetAtt CognitoAuthRole.Arn
+        unauthenticated: !GetAtt CognitoUnauthRole.Arn
+
+Outputs:
+  RMUserPoolID:
+    Description: "User Pool Id for Review Master User Pool"
+    Value: !Ref "RMUserPool"
+    Export:
+      Name: "RMUserPoolID"
+  RMUserPoolClientID:
+    Description: "User Pool Client Id for Review Master App"
+    Value: !Ref "RMUserPoolClient"
+    Export:
+      Name: "RMUserPoolClientID"
+  RMIdentityPoolID:
+    Description: "Identity Pool Id for Review Master Identity Pool"
+    Value: !Ref "RMIdentityPool"
+    Export:
+      Name: "RMIdentityPoolID"
